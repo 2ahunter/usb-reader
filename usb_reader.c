@@ -55,20 +55,20 @@ int main(void) {
 
     // Send SET_CONTROL_LINE_STATE (0x22) to Interface 0
     // wValue = 0x0003 (Bit 0 = DTR, Bit 1 = RTS)
-    // r = libusb_control_transfer(
-    //     dev_handle,
-    //     0x21,       // bmRequestType: Host-to-Device | Class | Interface
-    //     0x22,       // bRequest: SET_CONTROL_LINE_STATE
-    //     0x0003,     // wValue: DTR (1) | RTS (1)
-    //     0,          // wIndex: Interface 0
-    //     NULL,       // data
-    //     0,          // wLength
-    //     1000        // timeout
-    // );
+    r = libusb_control_transfer(
+        dev_handle,
+        0x21,       // bmRequestType: Host-to-Device | Class | Interface
+        0x22,       // bRequest: SET_CONTROL_LINE_STATE
+        0x0003,     // wValue: DTR (1) | RTS (1)
+        0,          // wIndex: Interface 0
+        NULL,       // data
+        0,          // wLength
+        1000        // timeout
+    );
 
-    // if (r < 0) {
-    //     fprintf(stderr, "Failed to set CDC line state: %s\n", libusb_error_name(r));
-    // }
+    if (r < 0) {
+        fprintf(stderr, "Failed to set CDC line state: %s\n", libusb_error_name(r));
+    }
 
     // Send Start Streaming Command
     const char *cmd = "both continuous start\r"; // works only with '\r' termination
