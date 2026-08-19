@@ -12,9 +12,9 @@ import matplotlib.animation as animation
 # --- Configuration ---
 SERVER_IP = "127.0.0.1"
 PORT = 8080
-WINDOW_SIZE = 1000
+WINDOW_SIZE = 2000
 
-# Deques start completely EMPTY (no dummy 0.0s)
+# Deques start completely empty and will fill up to WINDOW_SIZE
 tdc0_data = collections.deque(maxlen=WINDOW_SIZE)
 tdc1_data = collections.deque(maxlen=WINDOW_SIZE)
 data_lock = threading.Lock()
@@ -39,7 +39,7 @@ def udp_worker():
         except Exception:
             pass
             
-        time.sleep(0.0005) # 500 µs poll delay
+        time.sleep(0.0005) # 300 µs poll delay
             
     sock.close()
 
@@ -53,7 +53,7 @@ fig, ax = plt.subplots()
 line0, = ax.plot([], [], label="TDC0", color='teal', animated=True)
 line1, = ax.plot([], [], label="TDC1", color='coral', animated=True)
 
-ax.set_title("Raspberry Pi Pico Real-Time TDC Data")
+ax.set_title("Real-Time TDC Data")
 ax.set_ylabel("TDC Reading")
 ax.set_xlabel("Samples Window")
 ax.grid(True)
@@ -82,15 +82,29 @@ def update_plot(frame):
     # Compute bounds strictly from real data
     min_val = min(min(y0), min(y1))
     max_val = max(max(y0), max(y1))
+    data_range = max_val - min_val
     
     # Scale axes if data moves out of current bounds
     if min_val < current_ymin or max_val > current_ymax:
-        padding = max(0.1, (max_val - min_val) * 0.1)
+        padding = max(0.1, data_range * 0.1)
+        current_ymin = min_val - padding
+        current_ymax = min_val + data_range + padding
+        ax.set_ylim(current_ymin, current_ymax)
+        fig.canvas.draw()
+    elif max_val > current_ymax:
+        padding = max(0.1, data_range * 0.1)
+        current_ymax = max_val + padding
+        current_ymin = max_val - data_range - padding
+        ax.set_ylim(current_ymin, current_ymax)
+        fig.canvas.draw()
+    elif data_range < (current_ymax - current_ymin) * 0.5:
+        # If data range is significantly smaller than current view, shrink view
+        padding = max(0.1, data_range * 0.1)
         current_ymin = min_val - padding
         current_ymax = max_val + padding
         ax.set_ylim(current_ymin, current_ymax)
         fig.canvas.draw()
-        
+            
     return line0, line1
 
 # Render GUI at 50 Hz (20 ms interval)
