@@ -39,7 +39,7 @@ def udp_worker():
         except Exception:
             pass
             
-        time.sleep(0.0005) # 300 µs poll delay
+        time.sleep(0.0005) # poll delay
             
     sock.close()
 
@@ -85,7 +85,7 @@ def update_plot(frame):
     data_range = max_val - min_val
     
     # Scale axes if data moves out of current bounds
-    if min_val < current_ymin or max_val > current_ymax:
+    if min_val < current_ymin:
         padding = max(0.1, data_range * 0.1)
         current_ymin = min_val - padding
         current_ymax = min_val + data_range + padding
